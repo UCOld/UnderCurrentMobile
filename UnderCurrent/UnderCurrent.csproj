@@ -32,9 +32,11 @@
   <ItemGroup>
     <Compile Include="UnderCurrent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="BlocksService.cs" />
-    <Compile Include="Block.cs" />
-    <Compile Include="BlockObject.cs" />
+    <Compile Include="TileService.cs" />
+    <Compile Include="Tile.cs" />
+    <Compile Include="Collection.cs" />
+    <Compile Include="TileDefinition.cs" />
+    <Compile Include="Field.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Xamarin.Forms.Core">

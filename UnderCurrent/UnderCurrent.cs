@@ -1,48 +1,88 @@
 ﻿using System;
-
 using Xamarin.Forms;
 
 namespace UnderCurrent
 {
 	public class App : Application
 	{
-		static ListView blockList = new ListView();
+		static ActivityIndicator indicator = new ActivityIndicator { Color = new Color(.5) };
+
+		static StackLayout layout = new StackLayout
+		{
+			// Accomodate iphone status bar
+			Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5)
+		};
 
 		public static Page getMainPage()
 		{
-
-			Button sendGetButton = new Button
+			var welcomeText = new Label
 			{
-				Text = "Send GET request"
+				Text = "Welcome to Under Current!",
+				VerticalOptions = LayoutOptions.Center,
+				HorizontalOptions = LayoutOptions.Center
 			};
+			var getStartedButton = new Button { Text = "Click to get started" };
 
-			sendGetButton.Clicked += sendGetButtonClicked;
-			blockList.ItemTemplate = new DataTemplate(typeof(TextCell));
-			blockList.SetBinding(TextCell.TextProperty, "blockName");
+			layout.Children.Add(welcomeText);
+			layout.Children.Add(getStartedButton);
+			layout.Children.Add(indicator);
+
+			getStartedButton.Clicked += getStartedButtonClicked;
+
+
 			return new ContentPage
 			{
 
-				Content = new StackLayout
-				{
-					Children = {
-					sendGetButton,
-						blockList
-					}
-				}
+				Content = layout
 
 			};
 		}
 
-		static async void sendGetButtonClicked(object sender, EventArgs e)
+		protected static Tile[] getTiles()
 		{
-			BlocksService blocksService = new BlocksService();
-			Block[] blocks = await blocksService.GetBlocksAsync();
-				blockList.ItemsSource = blocks;
+			var tileService = new TileService();
+			return tileService.GetTilesAsync().Result;
+
+		}
+
+		protected static void getStartedButtonClicked(object sender, EventArgs e)
+		{
+			indicator.IsVisible = true;
+			indicator.IsRunning = true;
+			indicator.Focus();
+
+			//indicator.SetBinding(ActivityIndicator.IsRunningProperty, "IsLoading");
+
+			Tile[] tiles = getTiles();
+
+			foreach (Tile tile in tiles)
+			{
+
+				foreach (TileDefinition tileDefinition in tile.editableFields)
+				{
+					foreach (Collection collections in tileDefinition.collections)
+					{
+						foreach (Field field in collections.editableFields)
+							layout.Children.Add(
+								new Button
+								{
+									Text = "Name: " + tile.name +
+												   " x: " + tile.xCoord +
+												" y: " + tile.yCoord +
+												" z: " + tile.zCoord
+								});
+					}
+				}
+			}
+
+			indicator.IsRunning = false;
+			indicator.Unfocus();
 		}
 
 		protected override void OnStart()
 		{
 			MainPage = getMainPage();
+
 		}
 
 		protected override void OnSleep()
