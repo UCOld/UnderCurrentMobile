@@ -3,17 +3,21 @@ using Xamarin.Forms;
 
 namespace UnderCurrent
 {
-	public class App : Application
-	{
-		static ActivityIndicator indicator = new ActivityIndicator { Color = new Color(.5) };
+    public class App : Application
+    {
+        static ActivityIndicator indicator = new ActivityIndicator {};
 
-		static StackLayout layout = new StackLayout
-		{
-			// Accomodate iphone status bar
-			Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5)
-		};
+        static Label error = new Label() { Text = "" };
 
-		public static Page getMainPage()
+        static bool authenticated = new bool();
+
+        static StackLayout layout = new StackLayout
+        {
+            // Accomodate iphone status bar
+            Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5)
+        };
+
+        public static Page getMainPage()
 		{
 			var welcomeText = new Label
 			{
@@ -21,16 +25,24 @@ namespace UnderCurrent
 				VerticalOptions = LayoutOptions.Center,
 				HorizontalOptions = LayoutOptions.Center
 			};
-			var getStartedButton = new Button { Text = "Click to get started" };
+
+            var authenticateButton = new Button { Text = "Authenticate me!" };
+
+            var getStartedButton = new Button { Text = "Let's get started!"};
 
 			layout.Children.Add(welcomeText);
 			layout.Children.Add(getStartedButton);
-			layout.Children.Add(indicator);
+            layout.Children.Add(authenticateButton);
+            layout.Children.Add(indicator);
+            layout.Children.Add(error);
 
-			getStartedButton.Clicked += getStartedButtonClicked;
+            getStartedButton.Clicked += getStartedButtonClicked;
+            
+            authenticateButton.Clicked += authenticateButtonClicked;
 
 
-			return new ContentPage
+
+            return new ContentPage
 			{
 
 				Content = layout
@@ -40,46 +52,68 @@ namespace UnderCurrent
 
 		protected static Tile[] getTiles()
 		{
-			var tileService = new TileService();
-			return tileService.GetTilesAsync().Result;
+            try
+            {
+                var tileService = new TileService();
 
-		}
+                Tile[] tiles = tileService.GetTilesAsync().Result;
+                return tiles;
+            }
+            catch (Exception e)
+            {
+                error.Text = e.ToString();
+                return null;
+            }
 
-		protected static void getStartedButtonClicked(object sender, EventArgs e)
+        }
+
+        protected static void getStartedButtonClicked(object sender, EventArgs e)
 		{
 			indicator.IsVisible = true;
 			indicator.IsRunning = true;
-			indicator.Focus();
-
-			//indicator.SetBinding(ActivityIndicator.IsRunningProperty, "IsLoading");
 
 			Tile[] tiles = getTiles();
 
-			foreach (Tile tile in tiles)
-			{
+            if (tiles != null)
+            {
 
-				foreach (TileDefinition tileDefinition in tile.editableFields)
-				{
-					foreach (Collection collections in tileDefinition.collections)
-					{
-						foreach (Field field in collections.editableFields)
-							layout.Children.Add(
-								new Button
-								{
-									Text = "Name: " + tile.name +
-												   " x: " + tile.xCoord +
-												" y: " + tile.yCoord +
-												" z: " + tile.zCoord
-								});
-					}
-				}
-			}
+                foreach (Tile tile in tiles)
+                {
 
-			indicator.IsRunning = false;
-			indicator.Unfocus();
+                    foreach (TileDefinition tileDefinition in tile.editableFields)
+                    {
+                        foreach (Collection collections in tileDefinition.collections)
+                        {
+                            foreach (Field field in collections.editableFields)
+                                layout.Children.Add(
+                                    new Button
+                                    {
+                                        Text = "Name: " + tile.name +
+                                                       " x: " + tile.xCoord +
+                                                    " y: " + tile.yCoord +
+                                                    " z: " + tile.zCoord
+                                    });
+                        }
+                    }
+                }
+            }
+
+            indicator.IsRunning = false;
+            indicator.Unfocus();
+            
 		}
 
-		protected override void OnStart()
+        protected static void authenticateButtonClicked(object sender, EventArgs e)
+        {
+            indicator.IsVisible = true;
+            indicator.IsRunning = true;
+            var tileService = new TileService();
+            authenticated = tileService.Authenticate().Result;
+            indicator.IsVisible = false;
+            indicator.IsRunning = false;
+        }
+
+        protected override void OnStart()
 		{
 			MainPage = getMainPage();
 
