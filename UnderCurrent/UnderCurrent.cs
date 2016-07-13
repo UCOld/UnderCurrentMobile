@@ -3,21 +3,28 @@ using Xamarin.Forms;
 
 namespace UnderCurrent
 {
-    public class App : Application
-    {
-        static ActivityIndicator indicator = new ActivityIndicator {};
+	public class App : Application
+	{
+		static ActivityIndicator indicator = new ActivityIndicator { };
 
-        static Label error = new Label() { Text = "" };
+		static Label state = new Label
+		{
+			VerticalOptions = LayoutOptions.Center,
+			HorizontalOptions = LayoutOptions.Center,
+			FontSize = Device.GetNamedSize(NamedSize.Small, typeof(Label))
+		};
 
-        static bool authenticated = new bool();
+		static Button authenticateButton, getStartedButton;
 
-        static StackLayout layout = new StackLayout
-        {
-            // Accomodate iphone status bar
-            Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5)
-        };
+		static bool authenticated;
 
-        public static Page getMainPage()
+		static StackLayout layout = new StackLayout
+		{
+			// Accomodate iphone status bar
+			Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5)
+		};
+
+		public static Page getMainPage()
 		{
 			var welcomeText = new Label
 			{
@@ -26,94 +33,112 @@ namespace UnderCurrent
 				HorizontalOptions = LayoutOptions.Center
 			};
 
-            var authenticateButton = new Button { Text = "Authenticate me!" };
+			authenticateButton = new Button { Text = "Authenticate me!" };
 
-            var getStartedButton = new Button { Text = "Let's get started!"};
+			getStartedButton = new Button { Text = "Let's get started!", IsEnabled = false };
 
 			layout.Children.Add(welcomeText);
+			layout.Children.Add(authenticateButton);
+			layout.Children.Add(state);
 			layout.Children.Add(getStartedButton);
-            layout.Children.Add(authenticateButton);
-            layout.Children.Add(indicator);
-            layout.Children.Add(error);
+			layout.Children.Add(indicator);
 
-            getStartedButton.Clicked += getStartedButtonClicked;
-            
-            authenticateButton.Clicked += authenticateButtonClicked;
+			authenticateButton.Clicked += authenticateButtonClicked;
+			getStartedButton.Clicked += getStartedButtonClicked;
 
-
-
-            return new ContentPage
+			return new ContentPage
 			{
-
 				Content = layout
 
 			};
 		}
 
-		protected static Tile[] getTiles()
-		{
-            try
-            {
-                var tileService = new TileService();
-
-                Tile[] tiles = tileService.GetTilesAsync().Result;
-                return tiles;
-            }
-            catch (Exception e)
-            {
-                error.Text = e.ToString();
-                return null;
-            }
-
-        }
-
-        protected static void getStartedButtonClicked(object sender, EventArgs e)
+		protected async static void getStartedButtonClicked(object sender, EventArgs e)
 		{
 			indicator.IsVisible = true;
 			indicator.IsRunning = true;
 
-			Tile[] tiles = getTiles();
+			if (authenticated)
+			{
 
-            if (tiles != null)
-            {
+				var tileService = new TileService();
+				var tiles = await tileService.GetTilesAsync();
 
-                foreach (Tile tile in tiles)
-                {
+				if (tiles != null)
+				{
 
-                    foreach (TileDefinition tileDefinition in tile.editableFields)
-                    {
-                        foreach (Collection collections in tileDefinition.collections)
-                        {
-                            foreach (Field field in collections.editableFields)
-                                layout.Children.Add(
-                                    new Button
-                                    {
-                                        Text = "Name: " + tile.name +
-                                                       " x: " + tile.xCoord +
-                                                    " y: " + tile.yCoord +
-                                                    " z: " + tile.zCoord
-                                    });
-                        }
-                    }
-                }
-            }
+					foreach (Tile tile in tiles)
+					{
 
-            indicator.IsRunning = false;
-            indicator.Unfocus();
-            
+						foreach (TileDefinition tileDefinition in tile.editableFields)
+						{
+							foreach (Collection collections in tileDefinition.collections)
+							{
+								foreach (Field field in collections.editableFields)
+								{
+									layout.Children.Add(
+										new StackLayout()
+										{
+											HorizontalOptions = LayoutOptions.Center,
+											Orientation = StackOrientation.Vertical,
+											Children = {
+												new Label
+												{
+													Text = "x: " + tile.xCoord + " y: " + tile.yCoord + " z: " + tile.zCoord,
+													HorizontalOptions = LayoutOptions.Center,
+													VerticalOptions = LayoutOptions.Center,
+													VerticalTextAlignment = TextAlignment.End,
+													FontSize = Device.GetNamedSize(NamedSize.Micro, typeof(Label)),
+												},
+
+												new Button
+												{
+													Text = tile.name,
+													HorizontalOptions = LayoutOptions.Center,
+													VerticalOptions = LayoutOptions.Center,
+
+												}
+
+											}
+
+
+										});
+								}
+							}
+						}
+					}
+				}
+				getStartedButton.IsEnabled = false;
+			}
+			else {
+				state.Text = "Please authenticate first";
+			}
+
+			indicator.IsRunning = false;
+			indicator.IsRunning = false;
+
 		}
 
-        protected static void authenticateButtonClicked(object sender, EventArgs e)
-        {
-            indicator.IsVisible = true;
-            indicator.IsRunning = true;
-            var tileService = new TileService();
-            authenticated = tileService.Authenticate().Result;
-            indicator.IsVisible = false;
-            indicator.IsRunning = false;
-        }
+		protected async static void authenticateButtonClicked(object sender, EventArgs e)
+		{
+			indicator.IsVisible = true;
+			indicator.IsRunning = true;
+			var tileService = new TileService();
+			authenticated = await tileService.Authenticate();
+			if (authenticated)
+			{
+				state.Text = "You are authenticated :)";
+				authenticateButton.IsEnabled = false;
+				getStartedButton.IsEnabled = true;
+			}
+			else {
+				state.Text = "You are not authenticated :(";
+			}
+			indicator.IsVisible = false;
+			indicator.IsRunning = false;
+		}
 
-        protected override void OnStart()
+		protected override void OnStart()
 		{
 			MainPage = getMainPage();
 

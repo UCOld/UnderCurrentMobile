@@ -11,8 +11,8 @@ namespace UnderCurrent
 		public async Task<Tile[]> GetTilesAsync()
 		{
 			var client = new System.Net.Http.HttpClient();
-			client.BaseAddress = new Uri("http://197.86.206.188:777/");
-			var response = await client.GetAsync("undercurrentcore/core?secretKey=xI0u1F");
+			client.BaseAddress = new Uri("http://197.89.14.171:777/");
+			var response = await client.GetAsync("undercurrentcore/core?secretKey=XnEHlj");
 			var json = response.Content.ReadAsStringAsync().Result;
 			JObject jsonObject = JObject.Parse(json);
 			var success = (bool)jsonObject.SelectToken("status");
@@ -31,14 +31,14 @@ namespace UnderCurrent
 			return tiles.ToArray();
 		}
 
-        public async Task <bool> Authenticate()
+        public async Task<bool> Authenticate()
         {
-            var client = new System.Net.Http.HttpClient();
-            client.BaseAddress = new Uri("http://197.86.206.188:777/");
+			var client = new System.Net.Http.HttpClient();
+            client.BaseAddress = new Uri("http://197.89.14.171:777/");
             var response = await client.GetAsync("undercurrentcore/auth?secretKey=XnEHlj");
-            var json = response.Content.ReadAsStringAsync().Result;
+			var json = response.Content.ReadAsStringAsync().Result;
             JObject jsonObject = JObject.Parse(json);
-            return (bool)jsonObject.SelectToken("status");
+			return (bool)jsonObject.SelectToken("status");
         }
 
     }
