@@ -1,11 +1,17 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Xamarin.Forms;
 
 namespace UnderCurrent
 {
 	public class App : Application
 	{
-		static ActivityIndicator indicator = new ActivityIndicator { };
+
+		static ActivityIndicator spinner = new ActivityIndicator
+        {
+            VerticalOptions = LayoutOptions.Center,
+            HorizontalOptions = LayoutOptions.Center
+        };
 
 		static Label state = new Label
 		{
@@ -14,7 +20,9 @@ namespace UnderCurrent
 			FontSize = Device.GetNamedSize(NamedSize.Small, typeof(Label))
 		};
 
-		static Button authenticateButton, getStartedButton;
+        static Tile[] tiles;
+
+        static Button authenticateButton, getStartedButton;
 
 		static bool authenticated;
 
@@ -26,6 +34,7 @@ namespace UnderCurrent
 
 		public static Page getMainPage()
 		{
+			
 			var welcomeText = new Label
 			{
 				Text = "Welcome to Under Current!",
@@ -41,10 +50,11 @@ namespace UnderCurrent
 			layout.Children.Add(authenticateButton);
 			layout.Children.Add(state);
 			layout.Children.Add(getStartedButton);
-			layout.Children.Add(indicator);
+			layout.Children.Add(spinner);
 
 			authenticateButton.Clicked += authenticateButtonClicked;
 			getStartedButton.Clicked += getStartedButtonClicked;
+			
 
 			return new ContentPage
 			{
@@ -55,87 +65,125 @@ namespace UnderCurrent
 
 		protected async static void getStartedButtonClicked(object sender, EventArgs e)
 		{
-			indicator.IsVisible = true;
-			indicator.IsRunning = true;
+            spinner.IsVisible = true;
+            spinner.IsRunning = true;
 
-			if (authenticated)
+            if (authenticated)
 			{
+                try
+                {
 
-				var tileService = new TileService();
-				var tiles = await tileService.GetTilesAsync();
+                    var tileService = new TileService();
+                    tiles = await tileService.GetTilesAsync();
 
-				if (tiles != null)
-				{
+                    if (tiles != null)
+                    {
 
-					foreach (Tile tile in tiles)
-					{
+                        foreach (Tile tile in tiles)
+                        {
 
-						foreach (TileDefinition tileDefinition in tile.editableFields)
-						{
-							foreach (Collection collections in tileDefinition.collections)
-							{
-								foreach (Field field in collections.editableFields)
-								{
-									layout.Children.Add(
-										new StackLayout()
-										{
-											HorizontalOptions = LayoutOptions.Center,
-											Orientation = StackOrientation.Vertical,
-											Children = {
-												new Label
-												{
-													Text = "x: " + tile.xCoord + " y: " + tile.yCoord + " z: " + tile.zCoord,
-													HorizontalOptions = LayoutOptions.Center,
-													VerticalOptions = LayoutOptions.Center,
-													VerticalTextAlignment = TextAlignment.End,
-													FontSize = Device.GetNamedSize(NamedSize.Micro, typeof(Label)),
-												},
+                            foreach (TileDefinition tileDefinition in tile.editableFields)
+                            {
+                                foreach (Collection collections in tileDefinition.collections)
+                                {
+                                    foreach (Field field in collections.editableFields)
+                                    {
 
-												new Button
-												{
-													Text = tile.name,
-													HorizontalOptions = LayoutOptions.Center,
-													VerticalOptions = LayoutOptions.Center,
+                                        var tileButton = new Button
+                                        {
+                                            HorizontalOptions = LayoutOptions.Center,
+                                            VerticalOptions = LayoutOptions.Center,
+                                            Text = tile.name
+                                        };
 
-												}
+                                        layout.Children.Add(
+                                            new StackLayout()
+                                            {
+                                                HorizontalOptions = LayoutOptions.Center,
+                                                Orientation = StackOrientation.Vertical,
+                                                Children = {
+                                                    new Label
+                                                    {
+                                                        Text = "x: " + tile.xCoord + " y: " + tile.yCoord + " z: " + tile.zCoord,
+                                                        HorizontalOptions = LayoutOptions.Center,
+                                                        VerticalOptions = LayoutOptions.Center,
+                                                        VerticalTextAlignment = TextAlignment.End,
+                                                        FontSize = Device.GetNamedSize(NamedSize.Micro, typeof(Label)),
+                                                    },
+                                                    tileButton
+                                                }
+                                            });
 
-											}
+                                        tileButton.Clicked += tileButtonClicked;
 
+                                    }
+                                }
+                            }
+                        }
 
-										});
-								}
-							}
-						}
-					}
-				}
-				getStartedButton.IsEnabled = false;
-			}
+                    }
+                    getStartedButton.IsEnabled = false;
+
+                }
+                catch (TimeoutException)
+                {
+                    await App.Current.MainPage.DisplayAlert("Info", "Could not get information, please try again later", "OK");
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    spinner.IsRunning = false;
+                    spinner.IsRunning = false;
+                }
+            }
 			else {
 				state.Text = "Please authenticate first";
 			}
 
-			indicator.IsRunning = false;
-			indicator.IsRunning = false;
-
 		}
+
+		private async static void tileButtonClicked(object sender, EventArgs e)
+		{
+			var tilePage = new NavigationPage(new TilePage(tiles));
+            await App.Current.MainPage.Navigation.PushModalAsync(tilePage);
+        }
 
 		protected async static void authenticateButtonClicked(object sender, EventArgs e)
 		{
-			indicator.IsVisible = true;
-			indicator.IsRunning = true;
-			var tileService = new TileService();
-			authenticated = await tileService.Authenticate();
-			if (authenticated)
-			{
-				state.Text = "You are authenticated :)";
-				authenticateButton.IsEnabled = false;
-				getStartedButton.IsEnabled = true;
-			}
-			else {
-				state.Text = "You are not authenticated :(";
-			}
-			indicator.IsVisible = false;
-			indicator.IsRunning = false;
+            spinner.IsVisible = true;
+            spinner.IsRunning = true;
+            try
+            {
+                var tileService = new TileService();
+                authenticated = await tileService.Authenticate();
+                if (authenticated)
+                {
+                    state.Text = "You are authenticated :)";
+                    authenticateButton.IsEnabled = false;
+                    getStartedButton.IsEnabled = true;
+                }
+                else
+                {
+                    state.Text = "You are not authenticated :(";
+                }
+                
+            } catch (TimeoutException)
+            {
+                await App.Current.MainPage.DisplayAlert("Info", "Could not authenticate, please try again later", "OK");
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                spinner.IsVisible = false;
+                spinner.IsRunning = false;
+            }
 		}
 
 		protected override void OnStart()
