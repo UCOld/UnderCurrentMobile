@@ -8,8 +8,8 @@ namespace UnderCurrent
     public class TileService
     {
 
-        private String serverUrl = "http://197.89.14.171:777/";
-        private String key = "agtiI0";
+		string serverUrl = "http://197.89.14.171:777/";
+        string key = "agtiI0";
 
         public async Task<Tile[]> GetTilesAsync()
         {
@@ -47,7 +47,7 @@ namespace UnderCurrent
                 return (bool)authObject.SelectToken("auth");
             } else {
                 return false; 
-                    };
+                    }
         }
 
     }

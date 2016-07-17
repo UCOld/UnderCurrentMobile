@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
-using System.Text;
-
-using Xamarin.Forms;
+﻿using Xamarin.Forms;
 
 namespace UnderCurrent
 {
@@ -45,41 +39,66 @@ namespace UnderCurrent
 
                                 layout.Children.Add(name);
                                 layout.Children.Add(description);
+								switch (field.editorType)
+								{
+									case "STRING":
+										
+										tileValue = new Entry
+										{
+											Placeholder = field.fieldValue
+										};
 
-                                if (field.editorType == "STRING")
-                                {
+										layout.Children.Add(tileValue);
 
-                                    tileValue = new Entry {
-                                        Placeholder = field.fieldValue
-                                    };
+										break;
+										
+									case "INTEGER":
+										
+										var label = new Label
+										{
+											Text = field.fieldValue
+										};
 
-                                    layout.Children.Add(tileValue);
+										var stepper = new Stepper
+										{
+											Value = double.Parse(field.fieldValue),
+											Minimum = double.Parse(field.minValue),
+											Maximum = double.Parse(field.maxValue),
+											Increment = 0.1,
+											HorizontalOptions = LayoutOptions.Center,
+											VerticalOptions = LayoutOptions.CenterAndExpand
+										};
 
-                                } else if (field.editorType == "INTEGER")
-                                {
-                                    var label = new Label
-                                    {
-                                        Text = field.fieldValue
-                                    };
+										stepper.ValueChanged += (sender, args) => { label.Text = stepper.Value.ToString(); };
 
-                                    Stepper stepper = new Stepper
-                                    {
-                                        Value = Double.Parse(field.fieldValue),
-                                        Minimum = Double.Parse(field.minValue),
-                                        Maximum = Double.Parse(field.maxValue),
-                                        Increment = 0.1,
-                                        HorizontalOptions = LayoutOptions.Center,
-                                        VerticalOptions = LayoutOptions.CenterAndExpand
-                                    };
+										layout.Children.Add(label);
+										layout.Children.Add(stepper);
 
-                                    stepper.ValueChanged += (sender, args) => { label.Text = stepper.Value.ToString(); };
+										break;
+										
+									case "BOOLEAN":
+										
+										var tableView = new TableView
+										{
+											Intent = TableIntent.Form,
+											Root = new TableRoot
+										{
+											new TableSection
+											{
+												new SwitchCell
+												{
+													Text = field.fieldName,
+													On = bool.Parse(field.fieldValue)
+												}
+											}
+										}
+										};
 
-                                    layout.Children.Add(label);
-                                    layout.Children.Add(stepper);
-                                    
-                                }
+										layout.Children.Add(tableView);
 
-                            }
+										break;
+								}
+							}
                         }
                     }
                 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Xamarin.Forms;
 
 namespace UnderCurrent
@@ -97,7 +96,7 @@ namespace UnderCurrent
                                         };
 
                                         layout.Children.Add(
-                                            new StackLayout()
+                                            new StackLayout
                                             {
                                                 HorizontalOptions = LayoutOptions.Center,
                                                 Orientation = StackOrientation.Vertical,
@@ -108,7 +107,7 @@ namespace UnderCurrent
                                                         HorizontalOptions = LayoutOptions.Center,
                                                         VerticalOptions = LayoutOptions.Center,
                                                         VerticalTextAlignment = TextAlignment.End,
-                                                        FontSize = Device.GetNamedSize(NamedSize.Micro, typeof(Label)),
+                                                        FontSize = Device.GetNamedSize(NamedSize.Micro, typeof(Label))
                                                     },
                                                     tileButton
                                                 }
@@ -127,7 +126,7 @@ namespace UnderCurrent
                 }
                 catch (TimeoutException)
                 {
-                    await App.Current.MainPage.DisplayAlert("Info", "Could not get information, please try again later", "OK");
+                    await Current.MainPage.DisplayAlert("Info", "Could not get information, please try again later", "OK");
                 }
                 catch (Exception ex)
                 {
@@ -148,42 +147,47 @@ namespace UnderCurrent
 		private async static void tileButtonClicked(object sender, EventArgs e)
 		{
 			var tilePage = new NavigationPage(new TilePage(tiles));
-            await App.Current.MainPage.Navigation.PushModalAsync(tilePage);
+            await Current.MainPage.Navigation.PushModalAsync(tilePage);
         }
 
 		protected async static void authenticateButtonClicked(object sender, EventArgs e)
 		{
             spinner.IsVisible = true;
             spinner.IsRunning = true;
-            try
-            {
-                var tileService = new TileService();
-                authenticated = await tileService.Authenticate();
-                if (authenticated)
-                {
-                    state.Text = "You are authenticated :)";
-                    authenticateButton.IsEnabled = false;
-                    getStartedButton.IsEnabled = true;
-                }
-                else
-                {
-                    state.Text = "You are not authenticated :(";
-                }
-                
-            } catch (TimeoutException)
-            {
-                await App.Current.MainPage.DisplayAlert("Info", "Could not authenticate, please try again later", "OK");
+			try
+			{
+				var tileService = new TileService();
+				authenticated = await tileService.Authenticate();
+				if (authenticated)
+				{
+					state.Text = "You are authenticated :)";
+					authenticateButton.IsEnabled = false;
+					getStartedButton.IsEnabled = true;
+				}
+				else
+				{
+					state.Text = "You are not authenticated :(";
+				}
 
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-            finally
-            {
-                spinner.IsVisible = false;
-                spinner.IsRunning = false;
-            }
+			}
+			catch (TimeoutException)
+			{
+				await Current.MainPage.DisplayAlert("Info", "Connection timed out, please try again later", "OK");
+
+			}
+			catch (System.Net.WebException)
+			{
+				await Current.MainPage.DisplayAlert("Info", "Could not reach server, please try again later", "OK");
+			}
+			catch (Exception ex)
+			{
+				throw ex;
+			}
+			finally
+			{
+				spinner.IsVisible = false;
+				spinner.IsRunning = false;
+			}
 		}
 
 		protected override void OnStart()
