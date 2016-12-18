@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Xamarin.Forms;
 
 namespace UnderCurrent
@@ -7,193 +8,208 @@ namespace UnderCurrent
 	{
 
 		static ActivityIndicator spinner = new ActivityIndicator
-        {
-            VerticalOptions = LayoutOptions.Center,
-            HorizontalOptions = LayoutOptions.Center
-        };
+		{
+			VerticalOptions = LayoutOptions.Center,
+			HorizontalOptions = LayoutOptions.Center
+		};
 
 		static Label state = new Label
 		{
+			Text = "",
+			IsVisible = false,
 			VerticalOptions = LayoutOptions.Center,
 			HorizontalOptions = LayoutOptions.Center,
 			FontSize = Device.GetNamedSize(NamedSize.Small, typeof(Label))
 		};
 
-        static Tile[] tiles;
-
-        static Button authenticateButton, getStartedButton;
-
 		static bool authenticated;
+		static Button authenticateButton;
 
 		static StackLayout layout = new StackLayout
 		{
 			// Accomodate iphone status bar
-			Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5)
+			Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5),
+			Spacing = 20,
 		};
+
+		static Entry usernameEntry = new Entry
+		{
+			Placeholder = "Player Name",
+			IsVisible = true,
+			FontSize = Device.GetNamedSize(NamedSize.Small, typeof(Entry)),
+			VerticalOptions = LayoutOptions.EndAndExpand,
+			HorizontalOptions = LayoutOptions.CenterAndExpand
+
+		};
+
+		static Entry passwordEntry = new Entry
+		{
+			IsPassword = true,
+			Placeholder = "Secret Key",
+			IsVisible = true,
+			FontSize = Device.GetNamedSize(NamedSize.Small, typeof(Entry)),
+			VerticalOptions = LayoutOptions.EndAndExpand,
+			HorizontalOptions = LayoutOptions.CenterAndExpand
+		};
+
+		static StackLayout buttonLayout = new StackLayout
+		{
+			VerticalOptions = LayoutOptions.EndAndExpand
+		};
+
+		static StackLayout editLayout = new StackLayout
+		{
+			VerticalOptions = LayoutOptions.CenterAndExpand,
+			Children = { usernameEntry, passwordEntry }
+		};
+
 
 		public static Page getMainPage()
 		{
-			
-			var welcomeText = new Label
+
+			if (!authenticated)
 			{
-				Text = "Welcome to Under Current!",
-				VerticalOptions = LayoutOptions.Center,
-				HorizontalOptions = LayoutOptions.Center
-			};
 
-			authenticateButton = new Button { Text = "Authenticate me!" };
+				var logo = new Image
+				{
+					Source = "logo.png",
+					VerticalOptions = LayoutOptions.CenterAndExpand
+				};
 
-			getStartedButton = new Button { Text = "Let's get started!", IsEnabled = false };
+				var welcomeText1 = new Label
+				{
+					Text = "\n\n\nWelcome to",
+					FontFamily = ("Roboto"),
+					FontSize = Device.GetNamedSize(NamedSize.Small, typeof(Label)),
+					FontAttributes = FontAttributes.Italic,
+					HorizontalOptions = LayoutOptions.Center
+				};
 
-			layout.Children.Add(welcomeText);
-			layout.Children.Add(authenticateButton);
-			layout.Children.Add(state);
-			layout.Children.Add(getStartedButton);
-			layout.Children.Add(spinner);
+				var welcomeText2 = new Label
+				{
+					Text = "Under Current\n",
+					TextColor = Color.White,
+					FontFamily = ("Roboto"),
+					FontSize = Device.GetNamedSize(NamedSize.Large, typeof(Label)),
+					FontAttributes = FontAttributes.Bold,
+					HorizontalOptions = LayoutOptions.Center
+				};
 
-			authenticateButton.Clicked += authenticateButtonClicked;
-			getStartedButton.Clicked += getStartedButtonClicked;
-			
+				var textLayout = new StackLayout
+				{
+					Children = { welcomeText1, welcomeText2, logo }
+				};
+
+				authenticateButton = new Button
+				{
+					Text = "Connect",
+					FontFamily = ("Roboto Thin"),
+					FontSize = Device.GetNamedSize(NamedSize.Medium, typeof(Button)),
+					VerticalOptions = LayoutOptions.EndAndExpand,
+					HorizontalOptions = LayoutOptions.Center
+				};
+				buttonLayout.Children.Add(authenticateButton);
+
+				layout.Children.Add(textLayout);
+				layout.Children.Add(editLayout);
+				layout.Children.Add(buttonLayout);
+				layout.Children.Add(state);
+
+				authenticateButton.Clicked += authenticateButtonClicked;
+			}
 
 			return new ContentPage
 			{
-				Content = layout
+				Content = new ScrollView()
+				{
+					Content = layout
+				}
 
 			};
-		}
 
-		protected async static void getStartedButtonClicked(object sender, EventArgs e)
-		{
-            spinner.IsVisible = true;
-            spinner.IsRunning = true;
 
-            if (authenticated)
-			{
-                try
-                {
-
-                    var tileService = new TileService();
-                    tiles = await tileService.GetTilesAsync();
-
-                    if (tiles != null)
-                    {
-
-                        foreach (Tile tile in tiles)
-                        {
-
-                            foreach (TileDefinition tileDefinition in tile.editableFields)
-                            {
-                                foreach (Collection collections in tileDefinition.collections)
-                                {
-                                    foreach (Field field in collections.editableFields)
-                                    {
-
-                                        var tileButton = new Button
-                                        {
-                                            HorizontalOptions = LayoutOptions.Center,
-                                            VerticalOptions = LayoutOptions.Center,
-                                            Text = tile.name
-                                        };
-
-                                        layout.Children.Add(
-                                            new StackLayout
-                                            {
-                                                HorizontalOptions = LayoutOptions.Center,
-                                                Orientation = StackOrientation.Vertical,
-                                                Children = {
-                                                    new Label
-                                                    {
-                                                        Text = "x: " + tile.xCoord + " y: " + tile.yCoord + " z: " + tile.zCoord,
-                                                        HorizontalOptions = LayoutOptions.Center,
-                                                        VerticalOptions = LayoutOptions.Center,
-                                                        VerticalTextAlignment = TextAlignment.End,
-                                                        FontSize = Device.GetNamedSize(NamedSize.Micro, typeof(Label))
-                                                    },
-                                                    tileButton
-                                                }
-                                            });
-
-                                        tileButton.Clicked += tileButtonClicked;
-
-                                    }
-                                }
-                            }
-                        }
-
-                    }
-                    getStartedButton.IsEnabled = false;
-
-                }
-                catch (TimeoutException)
-                {
-                    await Current.MainPage.DisplayAlert("Info", "Could not get information, please try again later", "OK");
-                }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
-                finally
-                {
-                    spinner.IsRunning = false;
-                    spinner.IsRunning = false;
-                }
-            }
-			else {
-				state.Text = "Please authenticate first";
-			}
 
 		}
 
-		private async static void tileButtonClicked(object sender, EventArgs e)
+		private async static Task<Block[]> getBlocks()
 		{
-			var tilePage = new NavigationPage(new TilePage(tiles));
-            await Current.MainPage.Navigation.PushModalAsync(tilePage);
-        }
+			var getBlockService = new CoreService();
+			System.Diagnostics.Debug.WriteLine("Get Block Service created");
+			return await getBlockService.GetBlocksAsync();
+
+		}
 
 		protected async static void authenticateButtonClicked(object sender, EventArgs e)
 		{
-            spinner.IsVisible = true;
-            spinner.IsRunning = true;
-			try
+			buttonLayout.Children.Remove(authenticateButton);
+			buttonLayout.Children.Add(spinner);
+			spinner.IsVisible = true;
+			spinner.IsRunning = true;
+			if (!authenticated)
 			{
-				var tileService = new TileService();
-				authenticated = await tileService.Authenticate();
-				if (authenticated)
+
+				try
 				{
-					state.Text = "You are authenticated :)";
-					authenticateButton.IsEnabled = false;
-					getStartedButton.IsEnabled = true;
+
+					var authenticateService = new CoreService();
+					authenticated = await authenticateService.Authenticate(usernameEntry.Text, passwordEntry.Text);
+
+					if (authenticated)
+					{
+
+						state.Text = "You are logged in";
+						var blocks = await getBlocks();
+						usernameEntry.IsEnabled = false;
+						passwordEntry.IsEnabled = false;
+						authenticateButton.Text = "Go to my blocks";
+						var blocksPage = new NavigationPage(new BlocksPage(blocks));
+						await Current.MainPage.Navigation.PushModalAsync(blocksPage);
+
+					}
+					else {
+						System.Diagnostics.Debug.WriteLine("Could not authenticate");
+						throw new UnauthorizedAccessException("Could not authenticate");
+					}
 				}
-				else
+				catch (TimeoutException)
 				{
-					state.Text = "You are not authenticated :(";
+					await Current.MainPage.DisplayAlert("Info", "Connection timed out, please try again later", "OK");
+
+				}
+				catch (System.Net.WebException)
+				{
+					await Current.MainPage.DisplayAlert("Info", "Could not reach server, please try again later", "OK");
+				}
+				catch (UnauthorizedAccessException)
+				{
+					await Current.MainPage.DisplayAlert("Info", "Could not connect, make sure your player name and secret key is correct and try again", "OK");
+				}
+				catch (Exception ex)
+				{
+					throw ex;
 				}
 
 			}
-			catch (TimeoutException)
-			{
-				await Current.MainPage.DisplayAlert("Info", "Connection timed out, please try again later", "OK");
-
+			else {
+				usernameEntry.IsEnabled = false;
+				passwordEntry.IsEnabled = false;
+				authenticateButton.Text = "Go to my blocks";
+				var blocksPage = new NavigationPage(new BlocksPage(await getBlocks()));
+				await Current.MainPage.Navigation.PushModalAsync(blocksPage);
 			}
-			catch (System.Net.WebException)
-			{
-				await Current.MainPage.DisplayAlert("Info", "Could not reach server, please try again later", "OK");
-			}
-			catch (Exception ex)
-			{
-				throw ex;
-			}
-			finally
-			{
-				spinner.IsVisible = false;
-				spinner.IsRunning = false;
-			}
+			spinner.IsVisible = false;
+			spinner.IsRunning = false;
+			buttonLayout.Children.Add(authenticateButton);
+			buttonLayout.Children.Remove(spinner);
 		}
 
 		protected override void OnStart()
 		{
-			MainPage = getMainPage();
+			if (MainPage == null)
+			{
 
+				MainPage = getMainPage();
+			}
 		}
 
 		protected override void OnSleep()
@@ -203,7 +219,7 @@ namespace UnderCurrent
 
 		protected override void OnResume()
 		{
-			// Handle when your app resumes
+			//MainPage.Navigation.PopToRootAsync(true);
 		}
 	}
 }

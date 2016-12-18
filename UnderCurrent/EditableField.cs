@@ -1,7 +1,10 @@
-﻿namespace UnderCurrent
+﻿using System.Collections.Generic;
+
+namespace UnderCurrent
 {
-	public class Field
+	public class EditableField
 	{
+		
 		public string editorType { get; set; }
 
 		public string fieldName { get; set; }

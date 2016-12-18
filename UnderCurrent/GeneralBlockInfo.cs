@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using Newtonsoft.Json;
+using Xamarin.Forms;
 
 namespace UnderCurrent
 {
-	public class Tile
+	public class GeneralBlockInfo
 	{
 		[JsonProperty("internalName")]
 		public string internalName { get; set; }
@@ -25,9 +26,6 @@ namespace UnderCurrent
 
 		[JsonProperty("dimName")]
 		public string dimName { get; set; }
-
-		[JsonProperty("editableFields")]
-		public List<TileDefinition> editableFields { get; set; }
-
 	}
 }
+
