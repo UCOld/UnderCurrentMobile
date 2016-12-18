@@ -69,6 +69,7 @@ namespace UnderCurrent
 
 			if (!authenticated)
 			{
+				Current.MainPage.IsBusy = true;
 
 				var logo = new Image
 				{
@@ -114,20 +115,22 @@ namespace UnderCurrent
 				layout.Children.Add(editLayout);
 				layout.Children.Add(buttonLayout);
 				layout.Children.Add(state);
+				layout.Children.Add(new Label { Text = "" });
 
 				authenticateButton.Clicked += authenticateButtonClicked;
-			}
 
-			return new ContentPage
-			{
-				Content = new ScrollView()
+				return new ContentPage
 				{
-					Content = layout
-				}
+					Content = new ScrollView()
+					{
+						Content = layout
+					}
 
-			};
-
-
+				};
+			}
+			else {
+				return Current.MainPage;
+			}
 
 		}
 
@@ -214,7 +217,7 @@ namespace UnderCurrent
 
 		protected override void OnSleep()
 		{
-			// Handle when your app sleeps
+			
 		}
 
 		protected override void OnResume()

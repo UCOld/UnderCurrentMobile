@@ -78,7 +78,6 @@ namespace UnderCurrent
 
 
 		protected async static void blockButtonClicked(object sender, EventArgs e, Block block)
-
 		{
 			Application.Current.Properties["currentBlock"] = block.generalBlockInfo.name;
 			var blockPage = new NavigationPage(new BlockPage(block));

@@ -5,7 +5,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnderCurrent", "UnderCurren
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnderCurrent.iOS", "iOS\UnderCurrent.iOS.csproj", "{EF40EC69-E686-42E9-AF86-CE77998E6DA5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnderCurrent.Droid", "Droid\UnderCurrent.Droid.csproj", "{13F4DDD7-AD03-4518-ACD6-E3AAF9772CCC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnderCurrent", "Droid\UnderCurrent.csproj", "{13F4DDD7-AD03-4518-ACD6-E3AAF9772CCC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

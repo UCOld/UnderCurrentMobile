@@ -16,7 +16,7 @@ namespace UnderCurrent
 			var client = new HttpClient();
 			client.BaseAddress = new Uri(serverUrl);
 
-			var task = client.GetAsync("undercurrentcore/tile?playerName=" + App.Current.Properties["username"] + "&secretKey=" + App.Current.Properties["password"]);
+			var task = client.GetAsync("undercurrentcore/tile?playerName=" + Xamarin.Forms.Application.Current.Properties["username"] + "&secretKey=" + Xamarin.Forms.Application.Current.Properties["password"]);
 			await TimeoutAfter(task, 8000);
 			var response = await task;
 			var json = response.Content.ReadAsStringAsync().Result;
@@ -35,7 +35,7 @@ namespace UnderCurrent
 			}
 			else
 			{
-				throw new Exception("Unable to get blocks, " + jsonObject["message"].ToString());
+				throw new Exception("Unable to get blocks, " + jsonObject["message"]);
 			}
 			return blocks.ToArray();
 		}
@@ -69,20 +69,61 @@ namespace UnderCurrent
 			await TimeoutAfter(task, 8000);
 			var response = await task;
 			var json = response.Content.ReadAsStringAsync().Result;
-			System.Diagnostics.Debug.WriteLine("Json: " + json);
+			System.Diagnostics.Debug.WriteLine("Response Json: " + json);
 			JObject jsonObject = JObject.Parse(json);
 			var requestSuccess = (bool)jsonObject.SelectToken("status");
 			if (requestSuccess)
 			{
 				System.Diagnostics.Debug.WriteLine("Request successful " + jsonObject.SelectToken("message"));
-				App.Current.Properties["username"] = username;
-				App.Current.Properties["password"] = password;
+				Xamarin.Forms.Application.Current.Properties["username"] = username;
+				Xamarin.Forms.Application.Current.Properties["password"] = password;
 				return true;
 			}
-			else {
-				System.Diagnostics.Debug.WriteLine("Request unsuccessful, " + jsonObject.SelectToken("message"));
-				return false;
+			System.Diagnostics.Debug.WriteLine("Request unsuccessful, " + jsonObject.SelectToken("message"));
+			return false;
+		}
+
+		public async Task<bool> UpdateBlock(string internalName, string fieldName, string fieldValue)
+		{
+			var client = new HttpClient();
+
+			var requestMessage = new HttpRequestMessage(HttpMethod.Post, serverUrl + "undercurrentcore/tile");
+
+			JObject postData = new JObject();
+			JObject blockObject = new JObject();
+			JObject fieldObject = new JObject();
+			JArray editedDataArray = new JArray();
+			JArray dataArray = new JArray();
+			JObject userObject = new JObject();
+			userObject.Add("playerName", (string)Xamarin.Forms.Application.Current.Properties["username"]);
+			userObject.Add("secretKey", (string)Xamarin.Forms.Application.Current.Properties["password"]);
+			blockObject.Add("internalName", internalName);
+			fieldObject.Add("fieldName", fieldName);
+			fieldObject.Add("fieldValue", fieldValue);
+			editedDataArray.Add(fieldObject);
+			blockObject.Add("editedData", editedDataArray);
+			dataArray.Add(blockObject);      
+			postData.Add("user", userObject);
+			postData.Add("data", dataArray);
+
+			System.Diagnostics.Debug.WriteLine("Post Json: " + postData);
+
+			requestMessage.Content = new StringContent(postData.ToString(), System.Text.Encoding.UTF8, "application/json");
+
+			var task = client.SendAsync(requestMessage);
+			await TimeoutAfter(task, 8000);
+			var response = await task;
+			var json = response.Content.ReadAsStringAsync().Result;
+			System.Diagnostics.Debug.WriteLine("Response Json: " + json);
+			JObject jsonObject = JObject.Parse(json);
+			var requestSuccess = (bool)jsonObject.SelectToken("status");
+			if (requestSuccess)
+			{
+				System.Diagnostics.Debug.WriteLine("Request successful " + jsonObject.SelectToken("message"));
+				return true;
 			}
+			System.Diagnostics.Debug.WriteLine("Request unsuccessful, " + jsonObject.SelectToken("message"));
+			return false;
 		}
 	}
 }

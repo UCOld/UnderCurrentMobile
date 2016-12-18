@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Xamarin.Forms;
 
 namespace UnderCurrent
@@ -18,7 +19,7 @@ namespace UnderCurrent
 			};
 			layout.Children.Add(new Label { Text = "" });
 
-			Entry tileValue;
+			Entry stringEntry;
 			Label name;
 			Label description;
 
@@ -34,12 +35,21 @@ namespace UnderCurrent
 
 					name = new Label
 					{
-						Text = field.displayName
+						Text = field.displayName,
+						TextColor = Color.White,
+						FontFamily = ("Roboto"),
+						FontSize = Device.GetNamedSize(NamedSize.Medium, typeof(Label)),
+						FontAttributes = FontAttributes.Bold,
+						HorizontalOptions = LayoutOptions.Center
 					};
 
 					description = new Label
 					{
-						Text = field.displayDescription
+						Text = field.displayDescription,
+						FontFamily = ("Roboto"),
+						FontSize = Device.GetNamedSize(NamedSize.Small, typeof(Label)),
+						FontAttributes = FontAttributes.Italic,
+						HorizontalOptions = LayoutOptions.Center
 					};
 
 					layout.Children.Add(name);
@@ -48,13 +58,13 @@ namespace UnderCurrent
 					{
 						case "STRING":
 
-							tileValue = new Entry
+							stringEntry = new Entry
 							{
 								Placeholder = field.fieldValue
 							};
 
-							layout.Children.Add(tileValue);
-
+							layout.Children.Add(stringEntry);
+							stringEntry.Unfocused += (sender, EventArgs) => { updatedEvent(sender, EventArgs, block.generalBlockInfo.internalName, field.fieldName, field.fieldValue, stringEntry.Text); field.fieldValue = stringEntry.Text;};
 							break;
 
 						case "INTEGER":
@@ -75,7 +85,7 @@ namespace UnderCurrent
 							};
 
 							stepper.ValueChanged += (sender, args) => { label.Text = stepper.Value.ToString(); };
-
+							stepper.Unfocused += (sender, EventArgs) => { updatedEvent(sender, EventArgs, block.generalBlockInfo.internalName, field.fieldName, field.fieldValue, stepper.Value.ToString()); field.fieldValue = stepper.Value.ToString();};
 							layout.Children.Add(label);
 							layout.Children.Add(stepper);
 
@@ -83,22 +93,27 @@ namespace UnderCurrent
 
 						case "BOOLEAN":
 
+							var switchCell = new SwitchCell()
+							{
+								Text = field.fieldName,
+								On = bool.Parse(field.fieldValue)
+							};
+
 							var tableView = new TableView
 							{
+								HorizontalOptions = LayoutOptions.CenterAndExpand,
 								Intent = TableIntent.Form,
 								Root = new TableRoot
 										{
 											new TableSection
 											{
-												new SwitchCell
-												{
-													Text = field.fieldName,
-													On = bool.Parse(field.fieldValue)
-												}
+												switchCell
 											}
 										}
 							};
 
+
+							switchCell.OnChanged += (sender, EventArgs) => { updatedEvent(sender, EventArgs, block.generalBlockInfo.internalName, field.fieldName, field.fieldValue, switchCell.On.ToString()); field.fieldValue = switchCell.On.ToString();};
 							layout.Children.Add(tableView);
 
 							break;
@@ -111,6 +126,26 @@ namespace UnderCurrent
 			{
 				Content = layout
 			};
+		}
+
+		protected async static void updatedEvent(object sender, EventArgs e, string internalName, string fieldName, string oldFieldValue, string fieldValue)
+		{
+			System.Diagnostics.Debug.WriteLine("Internal Name: " + internalName);
+			System.Diagnostics.Debug.WriteLine("Field Name: " + fieldName);
+			System.Diagnostics.Debug.WriteLine("Old Field Value: " + oldFieldValue);
+			System.Diagnostics.Debug.WriteLine("Field Value: " + fieldValue);
+			if (!oldFieldValue.Equals(fieldValue))
+			{
+				var updateService = new CoreService();
+				var response = await updateService.UpdateBlock(internalName, fieldName, fieldValue);
+				if (response)
+				{
+					System.Diagnostics.Debug.WriteLine(fieldName + " data saved successfully");
+				}
+				else {
+					System.Diagnostics.Debug.WriteLine(fieldName + " data not saved");
+				}
+			}
 		}
 
 	}
