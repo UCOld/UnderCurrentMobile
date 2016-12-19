@@ -26,6 +26,12 @@ namespace UnderCurrent
 
 		[JsonProperty("dimName")]
 		public string dimName { get; set; }
+
+		[JsonProperty("lastModified")]
+		public string lastModified { get; set; }
+
+		[JsonProperty("timeAdded")]
+		public string timeAdded { get; set; }
 	}
 }
 

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Xamarin.Forms;
 
 namespace UnderCurrent
 {
 	public class BlockPage : ContentPage
 	{
-
+		
 		public BlockPage(Block block)
 		{
 			Title = Application.Current.Properties["currentBlock"].ToString();
@@ -32,7 +33,7 @@ namespace UnderCurrent
 
 				foreach (EditableField field in currentEditableFields)
 				{
-
+					var success = new bool();
 					name = new Label
 					{
 						Text = field.displayName,
@@ -64,7 +65,17 @@ namespace UnderCurrent
 							};
 
 							layout.Children.Add(stringEntry);
-							stringEntry.Unfocused += (sender, EventArgs) => { updatedEvent(sender, EventArgs, block.generalBlockInfo.internalName, field.fieldName, field.fieldValue, stringEntry.Text); field.fieldValue = stringEntry.Text;};
+							stringEntry.Unfocused += async (sender, EventArgs) =>
+							{
+								success = await updatedEvent(block.generalBlockInfo.internalName, field.fieldName, field.fieldValue, stringEntry.Text);
+								if (success)
+								{
+									field.fieldValue = stringEntry.Text;
+								}
+								else {
+									stringEntry.Text = field.fieldValue;
+								}
+							};
 							break;
 
 						case "INTEGER":
@@ -85,7 +96,18 @@ namespace UnderCurrent
 							};
 
 							stepper.ValueChanged += (sender, args) => { label.Text = stepper.Value.ToString(); };
-							stepper.Unfocused += (sender, EventArgs) => { updatedEvent(sender, EventArgs, block.generalBlockInfo.internalName, field.fieldName, field.fieldValue, stepper.Value.ToString()); field.fieldValue = stepper.Value.ToString();};
+							stepper.Unfocused += async (sender, EventArgs) =>
+							{
+								success = await updatedEvent(block.generalBlockInfo.internalName, field.fieldName, field.fieldValue, stepper.Value.ToString());
+								if (success)
+								{
+									field.fieldValue = stepper.Value.ToString();
+								}
+								else
+								{
+									stepper.Value = double.Parse(field.fieldValue);
+								}
+							};
 							layout.Children.Add(label);
 							layout.Children.Add(stepper);
 
@@ -113,7 +135,19 @@ namespace UnderCurrent
 							};
 
 
-							switchCell.OnChanged += (sender, EventArgs) => { updatedEvent(sender, EventArgs, block.generalBlockInfo.internalName, field.fieldName, field.fieldValue, switchCell.On.ToString()); field.fieldValue = switchCell.On.ToString();};
+							switchCell.OnChanged += async (sender, EventArgs) =>
+							{
+								success = await updatedEvent(block.generalBlockInfo.internalName, field.fieldName, field.fieldValue, switchCell.On.ToString());
+								if (success)
+								{
+									field.fieldValue = switchCell.On.ToString();
+								}
+								else {
+									switchCell.On = bool.Parse(field.fieldValue);
+								}
+							};
+							System.Diagnostics.Debug.WriteLine("Success: " + success);
+
 							layout.Children.Add(tableView);
 
 							break;
@@ -121,14 +155,28 @@ namespace UnderCurrent
 
 				}
 
+
 			}
-			Content = new ScrollView()
+
+
+
+			var scrollView = new ScrollView
 			{
+				VerticalOptions = LayoutOptions.FillAndExpand,
+				HorizontalOptions = LayoutOptions.FillAndExpand,
 				Content = layout
 			};
+
+			Content = scrollView;
+
+
+
 		}
 
-		protected async static void updatedEvent(object sender, EventArgs e, string internalName, string fieldName, string oldFieldValue, string fieldValue)
+
+
+
+		protected async static Task<bool> updatedEvent(string internalName, string fieldName, string oldFieldValue, string fieldValue)
 		{
 			System.Diagnostics.Debug.WriteLine("Internal Name: " + internalName);
 			System.Diagnostics.Debug.WriteLine("Field Name: " + fieldName);
@@ -145,7 +193,11 @@ namespace UnderCurrent
 				else {
 					System.Diagnostics.Debug.WriteLine(fieldName + " data not saved");
 				}
+				return response;
+
 			}
+			return false;
+
 		}
 
 	}

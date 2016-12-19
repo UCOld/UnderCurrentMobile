@@ -29,7 +29,7 @@ namespace UnderCurrent
 		{
 			// Accomodate iphone status bar
 			Padding = new Thickness(10, Device.OnPlatform(20, 0, 0), 10, 5),
-			Spacing = 20,
+			Spacing = 20
 		};
 
 		static Entry usernameEntry = new Entry
@@ -38,7 +38,8 @@ namespace UnderCurrent
 			IsVisible = true,
 			FontSize = Device.GetNamedSize(NamedSize.Small, typeof(Entry)),
 			VerticalOptions = LayoutOptions.EndAndExpand,
-			HorizontalOptions = LayoutOptions.CenterAndExpand
+			HorizontalOptions = LayoutOptions.CenterAndExpand,
+			HorizontalTextAlignment = TextAlignment.Center,
 
 		};
 
@@ -49,7 +50,8 @@ namespace UnderCurrent
 			IsVisible = true,
 			FontSize = Device.GetNamedSize(NamedSize.Small, typeof(Entry)),
 			VerticalOptions = LayoutOptions.EndAndExpand,
-			HorizontalOptions = LayoutOptions.CenterAndExpand
+			HorizontalOptions = LayoutOptions.CenterAndExpand,
+			HorizontalTextAlignment = TextAlignment.Center,
 		};
 
 		static StackLayout buttonLayout = new StackLayout
@@ -64,12 +66,14 @@ namespace UnderCurrent
 		};
 
 
+
 		public static Page getMainPage()
 		{
 
 			if (!authenticated)
 			{
-				Current.MainPage.IsBusy = true;
+
+				//Current.MainPage.IsBusy = true;
 
 				var logo = new Image
 				{
@@ -121,7 +125,7 @@ namespace UnderCurrent
 
 				return new ContentPage
 				{
-					Content = new ScrollView()
+					Content = new ScrollView
 					{
 						Content = layout
 					}
@@ -134,7 +138,7 @@ namespace UnderCurrent
 
 		}
 
-		private async static Task<Block[]> getBlocks()
+		async static Task<Block[]> getBlocks()
 		{
 			var getBlockService = new CoreService();
 			System.Diagnostics.Debug.WriteLine("Get Block Service created");
@@ -161,11 +165,12 @@ namespace UnderCurrent
 					{
 
 						state.Text = "You are logged in";
-						var blocks = await getBlocks();
+						//var blocks = await getBlocks();
 						usernameEntry.IsEnabled = false;
 						passwordEntry.IsEnabled = false;
 						authenticateButton.Text = "Go to my blocks";
-						var blocksPage = new NavigationPage(new BlocksPage(blocks));
+						var blocksPage = new NavigationPage(new BlocksPage());
+						//var blocksPage = new NavigationPage(new BlocksPage(blocks));
 						await Current.MainPage.Navigation.PushModalAsync(blocksPage);
 
 					}
@@ -197,8 +202,10 @@ namespace UnderCurrent
 				usernameEntry.IsEnabled = false;
 				passwordEntry.IsEnabled = false;
 				authenticateButton.Text = "Go to my blocks";
-				var blocksPage = new NavigationPage(new BlocksPage(await getBlocks()));
+				var blocksPage = new NavigationPage(new BlocksPage());
+				//var blocksPage = new NavigationPage(new BlocksPage(await getBlocks()));
 				await Current.MainPage.Navigation.PushModalAsync(blocksPage);
+
 			}
 			spinner.IsVisible = false;
 			spinner.IsRunning = false;

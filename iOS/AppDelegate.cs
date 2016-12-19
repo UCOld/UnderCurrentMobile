@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Foundation;
+using Refractored.XamForms.PullToRefresh.iOS;
 using UIKit;
 
 namespace UnderCurrent.iOS
@@ -12,7 +13,8 @@ namespace UnderCurrent.iOS
 	{
 		public override bool FinishedLaunching(UIApplication uiApplication, NSDictionary launchOptions)
 		{
-			global::Xamarin.Forms.Forms.Init();
+			Xamarin.Forms.Forms.Init();
+			PullToRefreshLayoutRenderer.Init();
 
 			LoadApplication(new App());
 
